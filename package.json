@@ -1,0 +1,20 @@
+{
+  "name": "physics-3d-lab",
+  "version": "1.0.0",
+  "description": "Interactive 3D Physics Laboratory with realistic physical apparatus",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "physics",
+    "3d",
+    "threejs",
+    "education",
+    "simulation",
+    "stem"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

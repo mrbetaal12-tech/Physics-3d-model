@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics 3D Lab — University Physics Laboratory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1422;
+            --sidebar-bg: #141b2d;
+            --card-bg: rgba(24, 32, 54, 0.92);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --accent-light: #818cf8;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
+            --green: #22c55e;
+            --cyan: #06b6d4;
+            --amber: #f59e0b;
+            --red: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ──── Sidebar Navigation ──── */
+        .sidebar {
+            position: fixed; left: 0; top: 0;
+            width: 300px; height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--card-border);
+            display: flex; flex-direction: column;
+            z-index: 100; box-shadow: 6px 0 28px rgba(0,0,0,0.45);
+        }
+        .sidebar-header {
+            padding: 22px 20px;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(255,255,255,0.02);
+        }
+        .sidebar-header h1 {
+            font-size: 1.25rem; font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-header p {
+            font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-list { padding: 14px 10px; flex: 1; overflow-y: auto; }
+        .nav-category {
+            font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.6px;
+            color: var(--text-muted); margin: 16px 0 6px 10px; font-weight: 700;
+        }
+        .nav-category:first-child { margin-top: 2px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 12px; border-radius: 9px;
+            cursor: pointer; transition: all 0.2s ease;
+            margin-bottom: 2px; font-size: 0.83rem;
+            color: var(--text-dim);
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            transform: translateX(2px);
+        }
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.18);
+            color: var(--accent-light); font-weight: 600;
+            border-left: 3px solid var(--accent);
+        }
+        .nav-icon {
+            width: 30px; height: 30px; border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.05rem; flex-shrink: 0;
+            background: rgba(255,255,255,0.04);
+        }
+        .nav-item.active .nav-icon { background: rgba(99, 102, 241, 0.25); }
+
+        /* ──── Main Layout ──── */
+        .main-content { margin-left: 300px; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* Top Bar */
+        .topbar {
+            height: 60px; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 30px;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(15, 20, 34, 0.92); backdrop-filter: blur(16px);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .breadcrumb { font-size: 0.82rem; color: var(--text-muted); }
+        .breadcrumb b { color: var(--text-main); font-weight: 600; }
+
+        .top-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-ctrl {
+            padding: 7px 15px; border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); color: var(--text-dim);
+            font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-ctrl:hover {
+            border-color: var(--accent); color: var(--text-main);
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .btn-ctrl.btn-action {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white; border: none; font-weight: 700;
+            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35);
+        }
+        .btn-ctrl.btn-action:hover {
+            opacity: 0.92; transform: translateY(-1px);
+        }
+
+        /* ──── Viewport Area ──── */
+        .workspace { padding: 24px 30px; }
+        .title-block { margin-bottom: 18px; }
+        .sim-title { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.5px; }
+        .sim-desc { color: var(--text-dim); font-size: 0.88rem; margin-top: 4px; max-width: 820px; line-height: 1.6; }
+
+        .viewport-container {
+            position: relative; border-radius: 14px; overflow: hidden;
+            border: 1px solid var(--card-border);
+            background: #090d18; box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+            margin-bottom: 22px;
+        }
+        #canvas3d { width: 100%; height: 600px; display: block; cursor: grab; }
+        #canvas3d:active { cursor: grabbing; }
+
+        .viewport-badges {
+            position: absolute; top: 16px; left: 16px; display: flex; gap: 8px;
+            pointer-events: none;
+        }
+        .badge {
+            padding: 5px 12px; border-radius: 20px; font-size: 0.68rem; font-weight: 600;
+            background: rgba(16, 22, 38, 0.85); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .badge.live { color: var(--green); }
+        .badge.fps { color: var(--cyan); }
+        .badge.cam-mode { color: var(--amber); }
+
+        .cam-dock {
+            position: absolute; bottom: 16px; right: 16px;
+            display: flex; gap: 6px; z-index: 10;
+        }
+        .cam-btn {
+            background: rgba(20, 28, 48, 0.9); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.12); color: var(--text-dim);
+            padding: 6px 14px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .cam-btn:hover, .cam-btn.active {
+            background: var(--accent); color: white; border-color: var(--accent);
+        }
+
+        /* ──── Telemetry & Controls Panels ──── */
+        .panels-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .lab-panel {
+            background: var(--card-bg); border-radius: 12px;
+            border: 1px solid var(--card-border); padding: 22px;
+            backdrop-filter: blur(14px);
+        }
+        .lab-panel h3 {
+            font-size: 0.92rem; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .panel-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Sliders */
+        .slider-row { margin-bottom: 16px; }
+        .slider-header {
+            display: flex; justify-content: space-between; margin-bottom: 6px;
+            font-size: 0.78rem; font-weight: 500;
+        }
+        .slider-label { color: var(--text-dim); }
+        .slider-value { font-family: 'JetBrains Mono', monospace; color: var(--accent-light); font-weight: 600; }
+        input[type="range"] {
+            width: 100%; -webkit-appearance: none; height: 5px;
+            border-radius: 4px; background: rgba(255,255,255,0.12); outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            border-radius: 50%; background: var(--accent); cursor: pointer;
+            border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Telemetry Cards */
+        .telemetry-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;
+        }
+        .telemetry-card {
+            background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.05); text-align: left;
+        }
+        .telemetry-card .t-label {
+            font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.8px; font-weight: 600;
+        }
+        .telemetry-card .t-value {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.25rem;
+            font-weight: 700; color: #a5b4fc; margin-top: 2px;
+        }
+        .telemetry-card .t-unit { font-size: 0.68rem; color: var(--text-muted); margin-left: 3px; font-weight: normal; }
+
+        .formula-box {
+            background: rgba(6, 182, 212, 0.05); border-radius: 8px;
+            padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.18);
+            line-height: 1.7; white-space: pre-wrap;
+        }
+
+        /* ──── Gallery / Overview Page ──── */
+        .landing-wrap { padding: 40px 30px; text-align: center; }
+        .hero-title {
+            font-size: 2.3rem; font-weight: 800;
+            background: linear-gradient(135deg, #c7d2fe, #38bdf8, #f472b6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .hero-desc {
+            color: var(--text-dim); max-width: 650px; margin: 0 auto 36px;
+            line-height: 1.7; font-size: 0.95rem;
+        }
+
+        .category-heading {
+            text-align: left; font-size: 0.72rem; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--text-muted); margin: 32px auto 14px;
+            max-width: 1080px; font-weight: 700;
+        }
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+            gap: 16px; max-width: 1080px; margin: 0 auto;
+        }
+        .sim-card {
+            background: var(--card-bg); border-radius: 12px;
+            border: 1px solid var(--card-border); padding: 22px 18px;
+            cursor: pointer; transition: all 0.25s ease; text-align: left;
+        }
+        .sim-card:hover {
+            border-color: var(--accent); transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(99,102,241,0.22);
+            background: rgba(30, 42, 70, 0.95);
+        }
+        .sim-card .card-icon {
+            width: 44px; height: 44px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; margin-bottom: 14px;
+            background: rgba(99, 102, 241, 0.15);
+        }
+        .sim-card h4 { font-size: 0.98rem; font-weight: 700; margin-bottom: 6px; }
+        .sim-card p { font-size: 0.77rem; color: var(--text-muted); line-height: 1.5; }
+        .sim-card .card-tag {
+            display: inline-block; margin-top: 12px; padding: 3px 10px;
+            border-radius: 14px; font-size: 0.64rem; font-weight: 600;
+            background: rgba(99, 102, 241, 0.18); color: var(--accent-light);
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 960px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .panels-grid { grid-template-columns: 1fr; }
+            #canvas3d { height: 420px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ──── Sidebar Navigation ──── -->
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <h1>⚛ Physics 3D Lab</h1>
+        <p>University Physics Laboratory Simulator</p>
+    </div>
+    <div class="nav-list">
+        <div class="nav-category">Home</div>
+        <div class="nav-item active" data-sim="home">
+            <div class="nav-icon">🏠</div><span>Laboratory Overview</span>
+        </div>
+
+        <div class="nav-category">Classical Mechanics</div>
+        <div class="nav-item" data-sim="cradle">
+            <div class="nav-icon">⚪</div><span>Newton's Cradle</span>
+        </div>
+        <div class="nav-item" data-sim="cannon">
+            <div class="nav-icon">💣</div><span>Artillery Ballistics</span>
+        </div>
+        <div class="nav-item" data-sim="ramp">
+            <div class="nav-icon">📐</div><span>Galileo's Inclined Plane</span>
+        </div>
+        <div class="nav-item" data-sim="spring">
+            <div class="nav-icon">🔩</div><span>Helical Spring Resonator</span>
+        </div>
+        <div class="nav-item" data-sim="gyroscope">
+            <div class="nav-icon">🌀</div><span>Mechanical Gyroscope</span>
+        </div>
+
+        <div class="nav-category">Fluids & Thermodynamics</div>
+        <div class="nav-item" data-sim="buoyancy">
+            <div class="nav-icon">🧪</div><span>Archimedes Buoyancy Tank</span>
+        </div>
+        <div class="nav-item" data-sim="gas">
+            <div class="nav-icon">🌡️</div><span>Kinetic Gas Chamber</span>
+        </div>
+
+        <div class="nav-category">Electromagnetism & Waves</div>
+        <div class="nav-item" data-sim="tesla">
+            <div class="nav-icon">⚡</div><span>Tesla High-Voltage Coil</span>
+        </div>
+        <div class="nav-item" data-sim="magnet">
+            <div class="nav-icon">🧲</div><span>Magnetic Dipole & Filings</span>
+        </div>
+        <div class="nav-item" data-sim="prism">
+            <div class="nav-icon">🌈</div><span>Glass Prism Spectrometer</span>
+        </div>
+
+        <div class="nav-category">Astronomy & Modern</div>
+        <div class="nav-item" data-sim="orrery">
+            <div class="nav-icon">🪐</div><span>Clockwork Brass Orrery</span>
+        </div>
+        <div class="nav-item" data-sim="atom">
+            <div class="nav-icon">⚛️</div><span>Quantum Atomic Model</span>
+        </div>
+    </div>
+</nav>
+
+<!-- ──── Main Content ──── -->
+<div class="main-content">
+    <div class="topbar">
+        <div class="breadcrumb">Physics Laboratory / <b id="top-title">Overview</b></div>
+        <div class="top-controls">
+            <button class="btn-ctrl btn-action" id="btn-action">▶ Run Action</button>
+            <button class="btn-ctrl" id="btn-lighting">💡 Light: Soft Anti-Glare</button>
+            <button class="btn-ctrl" id="btn-sound">🔊 Sound: ON</button>
+            <button class="btn-ctrl" id="btn-reset">↻ Reset</button>
+            <button class="btn-ctrl" id="btn-pause">⏸ Pause</button>
+        </div>
+    </div>
+
+    <!-- Home Page / Overview Grid -->
+    <div class="landing-wrap" id="page-home">
+        <h2 class="hero-title">University 3D Physics Laboratory</h2>
+        <p class="hero-desc">
+            Explore 12 interactive university-grade physical apparatus with soft glare-free studio lighting, matte textures, chalkboards, glassware, and mathematically exact physics.
+        </p>
+
+        <div class="category-heading">⚙️ Classical Mechanics & Dynamics</div>
+        <div class="cards-grid">
+            <div class="sim-card" data-sim="cradle">
+                <div class="card-icon">⚪</div>
+                <h4>Newton's Cradle</h4>
+                <p>Five brushed chrome steel balls with true elastic impulse collision physics and energy transfer.</p>
+                <span class="card-tag">Momentum Conservation</span>
+            </div>
+            <div class="sim-card" data-sim="cannon">
+                <div class="card-icon">💣</div>
+                <h4>Artillery Ballistics</h4>
+                <p>18th-century cast bronze cannon with barrel elevation, manual fire trigger, animated recoil, and parabolic arc.</p>
+                <span class="card-tag">Kinematics</span>
+            </div>
+            <div class="sim-card" data-sim="ramp">
+                <div class="card-icon">📐</div>
+                <h4>Galileo's Inclined Plane</h4>
+                <p>Graduated hardwood ramp on an elevation support jack with infrared photogate timers and rolling cart.</p>
+                <span class="card-tag">Friction & Acceleration</span>
+            </div>
+            <div class="sim-card" data-sim="spring">
+                <div class="card-icon">🔩</div>
+                <h4>Helical Spring Resonator</h4>
+                <p>Heavy iron stand with millimeter ruler, suspended steel coil spring, slotted brass weights, and energy bars.</p>
+                <span class="card-tag">Hooke's Law</span>
+            </div>
+            <div class="sim-card" data-sim="gyroscope">
+                <div class="card-icon">🌀</div>
+                <h4>Mechanical Gyroscope</h4>
+                <p>Dual brass and chrome gimbals with a weighted flywheel demonstrating precession and angular momentum.</p>
+                <span class="card-tag">Rotational Dynamics</span>
+            </div>
+        </div>
+
+        <div class="category-heading">🌊 Fluids, Optics & Electromagnetism</div>
+        <div class="cards-grid">
+            <div class="sim-card" data-sim="buoyancy">
+                <div class="card-icon">🧪</div>
+                <h4>Archimedes Buoyancy Tank</h4>
+                <p>Glass cylinder tank with water, overflow spout pouring into a beaker, and spring dynamometer scale.</p>
+                <span class="card-tag">Fluid Mechanics</span>
+            </div>
+            <div class="sim-card" data-sim="prism">
+                <div class="card-icon">🌈</div>
+                <h4>Glass Prism Spectrometer</h4>
+                <p>Solid flint glass prism on a turntable refracting white collimated light into full visible VIBGYOR spectrum.</p>
+                <span class="card-tag">Refraction & Dispersion</span>
+            </div>
+            <div class="sim-card" data-sim="tesla">
+                <div class="card-icon">⚡</div>
+                <h4>Tesla High-Voltage Coil</h4>
+                <p>Resonant transformer tower with polished chrome toroid discharging animated electrical arcs into air.</p>
+                <span class="card-tag">Electromagnetism</span>
+            </div>
+            <div class="sim-card" data-sim="magnet">
+                <div class="card-icon">🧲</div>
+                <h4>Magnetic Dipole & Filings</h4>
+                <p>Alnico painted red/blue bar magnet with hundreds of iron filings aligning along exact 3D dipole vectors.</p>
+                <span class="card-tag">Field Theory</span>
+            </div>
+        </div>
+
+        <div class="category-heading">🔭 Astronomy & Thermodynamics</div>
+        <div class="cards-grid">
+            <div class="sim-card" data-sim="orrery">
+                <div class="card-icon">🪐</div>
+                <h4>Clockwork Brass Orrery</h4>
+                <p>Grand mechanical planetarium with interlocking brass gears, central glowing sun lamp, and geared planetary orbits.</p>
+                <span class="card-tag">Orbital Mechanics</span>
+            </div>
+            <div class="sim-card" data-sim="gas">
+                <div class="card-icon">🌡️</div>
+                <h4>Kinetic Gas Chamber</h4>
+                <p>Glass-walled pressure cell with bouncing gas molecules, pressure gauge needle, and mercury thermometer.</p>
+                <span class="card-tag">Thermodynamics</span>
+            </div>
+            <div class="sim-card" data-sim="atom">
+                <div class="card-icon">⚛️</div>
+                <h4>Quantum Atomic Model</h4>
+                <p>Proton/neutron nucleus cluster surrounded by multi-shell electron probability density clouds.</p>
+                <span class="card-tag">Quantum Physics</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Simulation Viewport & Controls -->
+    <div class="workspace hidden" id="page-sim">
+        <div class="title-block">
+            <h2 class="sim-title" id="active-title">Simulation</h2>
+            <p class="sim-desc" id="active-desc">Description</p>
+        </div>
+
+        <div class="viewport-container">
+            <canvas id="canvas3d"></canvas>
+            <div class="viewport-badges">
+                <span class="badge live">● SIMULATION ACTIVE</span>
+                <span class="badge fps" id="fps-counter">60 FPS</span>
+                <span class="badge cam-mode" id="cam-badge">BENCH FOCUS</span>
+            </div>
+
+            <div class="cam-dock">
+                <button class="cam-btn active" data-cam="bench">Focus Bench</button>
+                <button class="cam-btn" data-cam="room">Lab View</button>
+                <button class="cam-btn" data-cam="top">Top Down</button>
+            </div>
+        </div>
+
+        <div class="panels-grid">
+            <!-- Left: Controls -->
+            <div class="lab-panel">
+                <h3><span class="panel-dot"></span> Apparatus Controls</h3>
+                <div id="sliders-box"></div>
+            </div>
+
+            <!-- Right: Physics & Telemetry -->
+            <div class="lab-panel">
+                <h3><span class="panel-dot" style="background:var(--cyan)"></span> Real-Time Physics Telemetry</h3>
+                <div class="telemetry-grid" id="telemetry-box"></div>
+                <div class="formula-box" id="formula-display"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Three.js + OrbitControls -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/* =========================================================================
+   PHYSICS 3D LAB — UNIVERSITY LABORATORY ENGINE (ANTI-GLARE DIFFUSED RIG)
+   ========================================================================= */
+
+// Audio Synthesizer (Web Audio API)
+let soundEnabled = true;
+let audioCtx = null;
+function getAudioContext() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+function playTone(freq, duration, type='sine', gainVal=0.2) {
+    if (!soundEnabled) return;
+    try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(freq*0.4, 20), ctx.currentTime + duration);
+        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + duration);
+    } catch(e){}
+}
+function playClickSound() { playTone(1200, 0.03, 'sine', 0.22); }
+function playCannonBlast() { playTone(130, 0.45, 'triangle', 0.8); }
+function playSparkSound() { playTone(2400, 0.05, 'sawtooth', 0.15); }
+
+document.getElementById('btn-sound').addEventListener('click', function() {
+    soundEnabled = !soundEnabled;
+    this.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+});
+
+// Lighting Modes (Cycle through to let users customize brightness on any monitor)
+let currentLightMode = 0;
+const LIGHT_MODES = [
+    { name: "💡 Light: Soft Anti-Glare", exposure: 0.95, key: 0.65, fill: 0.40, hemi: 0.70 },
+    { name: "💡 Light: Matte Neutral",   exposure: 0.85, key: 0.50, fill: 0.35, hemi: 0.60 },
+    { name: "💡 Light: Studio Clear",    exposure: 1.05, key: 0.80, fill: 0.45, hemi: 0.80 }
+];
+
+let keyLightRef = null, fillLightRef = null, hemiLightRef = null;
+
+document.getElementById('btn-lighting').addEventListener('click', function() {
+    currentLightMode = (currentLightMode + 1) % LIGHT_MODES.length;
+    const mode = LIGHT_MODES[currentLightMode];
+    this.textContent = mode.name;
+    if (renderer) renderer.toneMappingExposure = mode.exposure;
+    if (keyLightRef) keyLightRef.intensity = mode.key;
+    if (fillLightRef) fillLightRef.intensity = mode.fill;
+    if (hemiLightRef) hemiLightRef.intensity = mode.hemi;
+});
+
+// Procedural Canvas Texture Generators with Matte Finishes
+function makeChalkboardTexture() {
+    const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#1c2822'; c.fillRect(0,0,1024,512); // Deep non-reflective chalk slate
+    for(let i=0; i<3500; i++) {
+        c.fillStyle = `rgba(255,255,255,${Math.random()*0.035})`;
+        c.fillRect(Math.random()*1024, Math.random()*512, Math.random()*3, Math.random()*3);
+    }
+    c.strokeStyle = '#5a3d28'; c.lineWidth = 14; c.strokeRect(7,7,1010,498);
+    c.fillStyle = 'rgba(235, 245, 255, 0.88)';
+    c.font = 'bold 26px "JetBrains Mono", monospace';
+    c.fillText("PHYSICS LAB III — DYNAMICS & FIELDS", 50, 60);
+
+    c.font = '20px "JetBrains Mono", monospace';
+    c.fillStyle = 'rgba(255, 230, 180, 0.85)';
+    c.fillText("F = dp/dt = m·a", 60, 120);
+    c.fillText("τ = r × F = I·α", 60, 160);
+    c.fillText("E_k = ½ m v²  |  E_p = ½ k x²", 60, 200);
+    c.fillText("n₁ sin θ₁ = n₂ sin θ₂", 60, 240);
+
+    c.fillStyle = 'rgba(180, 230, 255, 0.85)';
+    c.fillText("P·V = n·R·T = N·k_B·T", 560, 120);
+    c.fillText("F_b = ρ_fluid · V_disp · g", 560, 160);
+    c.fillText("∮ B · dA = 0  (No Monopoles)", 560, 200);
+    c.fillText("E_n = -13.6 eV / n²", 560, 240);
+
+    c.strokeStyle = 'rgba(255, 255, 255, 0.55)'; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(250, 360); c.lineTo(460, 420); c.stroke();
+    c.strokeRect(330, 355, 50, 35);
+    c.font = '14px sans-serif'; c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.fillText("mg sin θ", 415, 400); c.fillText("N", 350, 335);
+
+    return new THREE.CanvasTexture(cv);
+}
+
+function makeTileTexture() {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 512;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#1e2433'; c.fillRect(0,0,512,512);
+    const size = 128;
+    for(let x=0; x<512; x+=size) {
+        for(let y=0; y<512; y+=size) {
+            c.fillStyle = ((x/size + y/size)%2 === 0) ? '#222b3d' : '#283449';
+            c.fillRect(x+2, y+2, size-4, size-4);
+            for(let k=0; k<50; k++){
+                c.fillStyle = `rgba(255,255,255,${Math.random()*0.03})`;
+                c.fillRect(x+Math.random()*size, y+Math.random()*size, 2, 2);
+            }
+        }
+    }
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(8, 8);
+    return tex;
+}
+
+function makeWoodBenchTexture() {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 512;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#7a543b'; c.fillRect(0,0,512,512); // Matte satin wood
+    c.fillStyle = '#603f29';
+    for(let y=0; y<512; y+=3) {
+        if (Math.random() > 0.35) c.fillRect(0, y, 512, 1.5 + Math.random()*2.5);
+    }
+    return new THREE.CanvasTexture(cv);
+}
+
+function makeRulerTexture() {
+    const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 128;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#ede3cc'; c.fillRect(0,0,1024,128);
+    c.fillStyle = '#1e1e1e';
+    c.font = 'bold 22px "JetBrains Mono", monospace';
+    for(let i=0; i<=100; i++) {
+        const x = i * 10 + 12;
+        const isTen = i % 10 === 0;
+        const isFive = i % 5 === 0;
+        const h = isTen ? 55 : (isFive ? 38 : 22);
+        c.fillRect(x, 0, isTen?3:1.5, h);
+        if (isTen) c.fillText(i.toString(), x - 10, 85);
+    }
+    return new THREE.CanvasTexture(cv);
+}
+
+function makeDialTexture(label) {
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#eceff4'; c.beginPath(); c.arc(128, 128, 120, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#333'; c.lineWidth = 5; c.stroke();
+    c.fillStyle = '#222'; c.font = 'bold 16px "JetBrains Mono", monospace';
+    c.textAlign = 'center'; c.fillText(label || "PRESSURE (kPa)", 128, 180);
+    for(let a = -140; a <= 140; a += 28) {
+        const rad = (a - 90) * Math.PI / 180;
+        const x1 = 128 + Math.cos(rad) * 110, y1 = 128 + Math.sin(rad) * 110;
+        const x2 = 128 + Math.cos(rad) * 92,  y2 = 128 + Math.sin(rad) * 92;
+        c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineWidth = 3; c.stroke();
+    }
+    return new THREE.CanvasTexture(cv);
+}
+
+// Global Three.js State
+let scene, camera, renderer, controls, animId;
+let paused = false;
+let clock = new THREE.Clock();
+let currentSim = 'home';
+let simData = {};
+
+// Soft Diffuse Anti-Glare Laboratory Construction
+function buildLaboratoryEnvironment() {
+    const curMode = LIGHT_MODES[currentLightMode];
+
+    // 1. Matte Floor Tiles (High roughness: 0.65 - no mirror glare)
+    const floorGeo = new THREE.PlaneGeometry(50, 50);
+    const floorMat = new THREE.MeshStandardMaterial({
+        map: makeTileTexture(), roughness: 0.65, metalness: 0.05
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
+    scene.add(floor);
+
+    // 2. Matte Back Classroom Wall
+    const backWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 18),
+        new THREE.MeshStandardMaterial({ color: 0x1e2738, roughness: 0.9 })
+    );
+    backWall.position.set(0, 9, -12); backWall.receiveShadow = true;
+    scene.add(backWall);
+
+    // 3. Chalkboard (Roughness 0.85 - absorbs harsh glare so text is crystal clear)
+    const boardMat = new THREE.MeshStandardMaterial({
+        map: makeChalkboardTexture(), roughness: 0.85, metalness: 0.0
+    });
+    const chalkboard = new THREE.Mesh(new THREE.PlaneGeometry(16, 7.5), boardMat);
+    chalkboard.position.set(0, 8.0, -11.9); chalkboard.receiveShadow = true;
+    scene.add(chalkboard);
+
+    // 4. Matte Oil-Rubbed Laboratory Workbench (Roughness 0.65 - no white glare streak)
+    const benchGroup = new THREE.Group();
+    const topMat = new THREE.MeshStandardMaterial({
+        map: makeWoodBenchTexture(), roughness: 0.65, metalness: 0.05
+    });
+    const benchTop = new THREE.Mesh(new THREE.BoxGeometry(16, 0.4, 7), topMat);
+    benchTop.position.set(0, 3.8, 0); benchTop.castShadow = true; benchTop.receiveShadow = true;
+    benchGroup.add(benchTop);
+
+    // Steel leg frame
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x2b3342, metalness: 0.6, roughness: 0.5 });
+    [[-7.5, -3], [7.5, -3], [-7.5, 3], [7.5, 3]].forEach(([x, z]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 3.8, 16), steelMat);
+        leg.position.set(x, 1.9, z); leg.castShadow = true;
+        benchGroup.add(leg);
+    });
+    const brace1 = new THREE.Mesh(new THREE.BoxGeometry(15, 0.12, 0.12), steelMat);
+    brace1.position.set(0, 1.2, -3); benchGroup.add(brace1);
+    const brace2 = new THREE.Mesh(new THREE.BoxGeometry(15, 0.12, 0.12), steelMat);
+    brace2.position.set(0, 1.2, 3); benchGroup.add(brace2);
+
+    scene.add(benchGroup);
+
+    // 5. Scientific Background Shelving with Colored Glassware
+    const shelfGroup = new THREE.Group();
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0x2d374a, roughness: 0.7 });
+    for(let y=3.5; y<=9.5; y+=2.5) {
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.15, 1.6), shelfMat);
+        shelf.position.set(15, y, -11); shelf.castShadow = true; shelfGroup.add(shelf);
+        for(let b=0; b<4; b++) {
+            const beaker = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.22, 0.22, 0.65, 16),
+                new THREE.MeshPhysicalMaterial({
+                    color: 0xffffff, transmission: 0.90, transparent: true, opacity: 0.35, roughness: 0.15
+                })
+            );
+            beaker.position.set(12.8 + b*1.2, y + 0.35, -11); shelfGroup.add(beaker);
+            const colors = [0x06b6d4, 0xef4444, 0x22c55e, 0xf59e0b, 0x818cf8];
+            const liquid = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.2, 0.2, 0.38, 16),
+                new THREE.MeshStandardMaterial({ color: colors[(y+b)%colors.length], roughness: 0.4 })
+            );
+            liquid.position.set(12.8 + b*1.2, y + 0.25, -11); shelfGroup.add(liquid);
+        }
+    }
+    scene.add(shelfGroup);
+
+    // 6. Overhead Pendant Fixtures
+    [-5, 5].forEach(x => {
+        const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 3.5, 8), steelMat);
+        cord.position.set(x, 11, 0); scene.add(cord);
+        const shade = new THREE.Mesh(new THREE.ConeGeometry(0.9, 0.6, 24, 1, true), steelMat);
+        shade.position.set(x, 9.2, 0); scene.add(shade);
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshBasicMaterial({color: 0xfaf5eb}));
+        bulb.position.set(x, 9.0, 0); scene.add(bulb);
+    });
+
+    // 7. BALANCED, DIFFUSED ANTI-GLARE STUDIO LIGHTING RIG
+    // Soft Sky/Floor Hemisphere (Provides clean uniform fill without burning specular spots)
+    hemiLightRef = new THREE.HemisphereLight(0xe8edf5, 0x242d3c, curMode.hemi);
+    scene.add(hemiLightRef);
+
+    // Diffused Warm Key Light (Soft shadows, reduced intensity from 1.3 -> 0.65 to eliminate glare)
+    keyLightRef = new THREE.DirectionalLight(0xfff8ee, curMode.key);
+    keyLightRef.position.set(8, 15, 10);
+    keyLightRef.castShadow = true;
+    keyLightRef.shadow.mapSize.set(2048, 2048);
+    keyLightRef.shadow.camera.near = 0.5; keyLightRef.shadow.camera.far = 40;
+    keyLightRef.shadow.camera.left = -14; keyLightRef.shadow.camera.right = 14;
+    keyLightRef.shadow.camera.top = 14; keyLightRef.shadow.camera.bottom = -14;
+    keyLightRef.shadow.bias = -0.0004;
+    scene.add(keyLightRef);
+
+    // Cool Opposite Fill Light (Gentle shadow softening)
+    fillLightRef = new THREE.DirectionalLight(0xdbe7f7, curMode.fill);
+    fillLightRef.position.set(-10, 12, -6);
+    scene.add(fillLightRef);
+
+    // Soft Overall Ambient
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambLight);
+}
+
+// Scene Initialization
+function initThree() {
+    cancelAnimationFrame(animId);
+    if (renderer) renderer.dispose();
+
+    scene = new THREE.Scene();
+    const canvas = document.getElementById('canvas3d');
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+
+    camera = new THREE.PerspectiveCamera(46, w / h, 0.1, 100);
+    camera.position.set(0, 7.5, 12);
+
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = LIGHT_MODES[currentLightMode].exposure; // Anti-glare calibrated
+
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 4.3, 0);
+    controls.maxPolarAngle = Math.PI / 2 + 0.02;
+
+    buildLaboratoryEnvironment();
+    simData = {};
+    clock = new THREE.Clock();
+}
+
+/* =========================================================================
+   ALL 12 DETAILED SIMULATIONS (SATIN/BRUSHED ANTI-GLARE FINISHES)
+   ========================================================================= */
+const SIMULATIONS = {
+
+    /* ─── 1. NEWTON'S CRADLE ─── */
+    cradle: {
+        title: "Newton's Cradle — Momentum Conservation",
+        desc: "Five brushed chrome steel balls suspended from dual metal suspension arches on a mahogany base. Pull 1 or 2 balls and watch momentum and kinetic energy conserve across the elastic collisions.",
+        actionBtn: "Pull & Release",
+        onAction() {
+            simData.balls.forEach((b, i) => {
+                b.omega = 0;
+                b.theta = (i < getSlider('pullCount')) ? (getSlider('releaseAngle') * Math.PI / 180) : 0;
+            });
+            playClickSound();
+        },
+        sliders: [
+            { id: 'pullCount', label: 'Balls to Pull', min: 1, max: 2, step: 1, value: 1, unit: '' },
+            { id: 'releaseAngle', label: 'Release Angle', min: 15, max: 55, step: 5, value: 35, unit: '°' },
+            { id: 'damping', label: 'Energy Retention', min: 0.990, max: 1.000, step: 0.001, value: 0.998, unit: '' }
+        ],
+        formula: "Momentum Conservation:\n∑ p_before = ∑ p_after\nm₁v₁ = m₅v₅\n\nKinetic Energy (Elastic):\n½ m v² = constant\n\nPeriod: T = 2π √(L/g)",
+        init() {
+            camera.position.set(0, 6.5, 8.5); controls.target.set(0, 5.2, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            // Mahogany plinth
+            const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.28, 2.8), new THREE.MeshStandardMaterial({
+                map: makeWoodBenchTexture(), roughness: 0.5, metalness: 0.05
+            }));
+            base.position.y = 0.14; base.castShadow = true; base.receiveShadow = true;
+            apparatus.add(base);
+
+            // Brushed Chrome arches (roughness 0.22 prevents blinding glare)
+            const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe0e3e8, metalness: 0.8, roughness: 0.22 });
+            [-1.15, 1.15].forEach(z => {
+                const arch1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16), chromeMat);
+                arch1.position.set(-2.0, 1.4, z); arch1.castShadow = true; apparatus.add(arch1);
+                const arch2 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16), chromeMat);
+                arch2.position.set(2.0, 1.4, z); arch2.castShadow = true; apparatus.add(arch2);
+                const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.1, 16), chromeMat);
+                bar.rotation.z = Math.PI / 2; bar.position.set(0, 2.7, z); bar.castShadow = true;
+                apparatus.add(bar);
+            });
+
+            // 5 Chrome Balls & Strings
+            const R = 0.25, L = 2.0;
+            simData.L = L; simData.R = R;
+            simData.balls = [];
+
+            const initPull = getSlider('pullCount');
+            const initAngle = getSlider('releaseAngle') * Math.PI / 180;
+
+            for (let i = 0; i < 5; i++) {
+                const homeX = (i - 2) * (R * 2.02);
+                const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(R, 32, 32), chromeMat);
+                ballMesh.castShadow = true; apparatus.add(ballMesh);
+
+                const strGeo = new THREE.BufferGeometry();
+                strGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(12), 3));
+                const strLine = new THREE.Line(strGeo, new THREE.LineBasicMaterial({ color: 0x94a3b8 }));
+                apparatus.add(strLine);
+
+                const angle = (i < initPull) ? initAngle : 0;
+                simData.balls.push({
+                    mesh: ballMesh, string: strLine, homeX,
+                    theta: angle, omega: 0
+                });
+            }
+
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const g = 9.8, L = simData.L, damp = getSlider('damping'), topY = 2.7;
+
+            simData.balls.forEach(b => {
+                const alpha = (-g / L) * Math.sin(b.theta);
+                b.omega += alpha * dt;
+                b.omega *= damp;
+                b.theta += b.omega * dt;
+            });
+
+            for (let i = 0; i < 4; i++) {
+                const b1 = simData.balls[i];
+                const b2 = simData.balls[i + 1];
+                if (b1.theta > b2.theta && (b1.omega - b2.omega) > 0) {
+                    const temp = b1.omega;
+                    b1.omega = b2.omega;
+                    b2.omega = temp;
+                    b1.theta = b2.theta;
+                    playClickSound();
+                }
+            }
+
+            simData.balls.forEach(b => {
+                const bx = b.homeX + L * Math.sin(b.theta);
+                const by = topY - L * Math.cos(b.theta);
+                b.mesh.position.set(bx, by, 0);
+
+                const pos = b.string.geometry.attributes.position.array;
+                pos[0] = b.homeX; pos[1] = topY; pos[2] = 1.15;
+                pos[3] = bx; pos[4] = by; pos[5] = 0;
+                pos[6] = b.homeX; pos[7] = topY; pos[8] = -1.15;
+                pos[9] = bx; pos[10] = by; pos[11] = 0;
+                b.string.geometry.attributes.position.needsUpdate = true;
+            });
+        },
+        telemetry() {
+            const b = simData.balls[0];
+            const v = b.omega * simData.L;
+            return [
+                { label: 'Ball 1 Angle', value: (b.theta * 180 / Math.PI).toFixed(1), unit: '°' },
+                { label: 'Velocity', value: Math.abs(v).toFixed(2), unit: 'm/s' },
+                { label: 'Kinetic Energy', value: (0.5 * 0.4 * v * v).toFixed(3), unit: 'J' },
+                { label: 'Period (T)', value: (2 * Math.PI * Math.sqrt(simData.L / 9.8)).toFixed(2), unit: 's' }
+            ];
+        }
+    },
+
+    /* ─── 2. ARTILLERY CANNON WITH BALLISTIC RECOIL ─── */
+    cannon: {
+        title: "Artillery Ballistics — Kinematics in 3D",
+        desc: "18th-century cast-bronze artillery cannon on a reinforced wooden carriage. Adjust elevation angle and muzzle velocity. Click 'Fire Cannon' to trigger muzzle blast and ballistic flight.",
+        actionBtn: "🚀 Fire Cannon",
+        onAction() {
+            simData.t = 0;
+            simData.isFlying = true;
+            simData.trailPts = [];
+            simData.recoil = 0.5;
+            playCannonBlast();
+        },
+        sliders: [
+            { id: 'elevation', label: 'Barrel Elevation θ', min: 15, max: 75, step: 5, value: 45, unit: '°' },
+            { id: 'velocity', label: 'Muzzle Velocity v₀', min: 8, max: 28, step: 1, value: 18, unit: 'm/s' },
+            { id: 'gravity', label: 'Local Gravity', min: 3, max: 15, step: 0.5, value: 9.8, unit: 'm/s²' }
+        ],
+        formula: "Kinematic Trajectory:\nx(t) = v₀ cos(θ) · t\ny(t) = v₀ sin(θ) · t − ½ g t²\n\nTheoretical Range:\nR = (v₀² sin 2θ) / g\nMax Altitude: H = (v₀² sin²θ) / 2g",
+        init() {
+            camera.position.set(-2, 6.8, 11); controls.target.set(3, 4.8, 0);
+            simData.t = 0; simData.isFlying = true; simData.recoil = 0;
+            const apparatus = new THREE.Group();
+
+            const cannonGroup = new THREE.Group();
+            cannonGroup.position.set(-5.5, 4.0, 0);
+
+            // Satin bronze & dark iron (roughness 0.4 prevents glare hotspots)
+            const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xc49a45, metalness: 0.72, roughness: 0.38 });
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x383e4a, metalness: 0.65, roughness: 0.5 });
+            const woodMat = new THREE.MeshStandardMaterial({ map: makeWoodBenchTexture(), roughness: 0.65 });
+
+            simData.barrelAssembly = new THREE.Group();
+            simData.barrelAssembly.position.set(0.6, 0.45, 0);
+
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.35, 2.8, 24), bronzeMat);
+            barrel.position.set(1.4, 0, 0); barrel.rotation.z = -Math.PI / 2;
+            barrel.castShadow = true; simData.barrelAssembly.add(barrel);
+
+            [-0.1, 0.6, 1.4, 2.2].forEach(x => {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.04, 12, 24), bronzeMat);
+                ring.position.set(x, 0, 0); ring.rotation.y = Math.PI / 2;
+                simData.barrelAssembly.add(ring);
+            });
+            cannonGroup.add(simData.barrelAssembly);
+
+            const carriage = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, 1.1), woodMat);
+            carriage.position.set(0.6, 0.1, 0); carriage.castShadow = true; cannonGroup.add(carriage);
+
+            [-0.7, 0.7].forEach(z => {
+                const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.08, 16, 32), ironMat);
+                wheel.rotation.y = Math.PI / 2; wheel.position.set(0.6, 0.1, z); wheel.castShadow = true;
+                cannonGroup.add(wheel);
+                for(let a=0; a<6; a++){
+                    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 8), woodMat);
+                    sp.rotation.y = Math.PI / 2; sp.rotation.x = a * Math.PI / 3;
+                    sp.position.set(0.6, 0.1, z); cannonGroup.add(sp);
+                }
+            });
+
+            apparatus.add(cannonGroup);
+            simData.cannonGroup = cannonGroup;
+
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 24), ironMat);
+            ball.castShadow = true; apparatus.add(ball);
+            simData.ball = ball;
+
+            simData.trailPts = [];
+            simData.trailGeo = new THREE.BufferGeometry();
+            const trailLine = new THREE.Line(
+                simData.trailGeo,
+                new THREE.LineBasicMaterial({ color: 0xf59e0b, linewidth: 2 })
+            );
+            apparatus.add(trailLine);
+
+            const crate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), woodMat);
+            crate.position.set(7.5, 4.4, 0); crate.castShadow = true; apparatus.add(crate);
+
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const v0 = getSlider('velocity');
+            const ang = getSlider('elevation') * Math.PI / 180;
+            const g = getSlider('gravity');
+
+            simData.barrelAssembly.rotation.z = ang;
+
+            if (simData.recoil > 0) {
+                simData.recoil = Math.max(simData.recoil - dt * 2.5, 0);
+            }
+            simData.cannonGroup.position.x = -5.5 - simData.recoil;
+
+            if (!simData.isFlying) return;
+
+            simData.t += dt * 1.6;
+            const t = simData.t;
+
+            const startX = -5.5 + 2.8 * Math.cos(ang);
+            const startY = 4.0 + 0.45 + 2.8 * Math.sin(ang);
+
+            const x = startX + v0 * Math.cos(ang) * t;
+            const y = startY + v0 * Math.sin(ang) * t - 0.5 * g * t * t;
+
+            if (y < 4.05) {
+                simData.isFlying = false;
+                simData.ball.position.set(x, 4.2, 0);
+            } else {
+                simData.ball.position.set(x, y, 0);
+                simData.trailPts.push(x, y, 0);
+                if (simData.trailPts.length > 2000) simData.trailPts.splice(0, 3);
+                simData.trailGeo.setAttribute('position', new THREE.Float32BufferAttribute(simData.trailPts, 3));
+            }
+        },
+        telemetry() {
+            const v0 = getSlider('velocity'), a = getSlider('elevation') * Math.PI / 180, g = getSlider('gravity');
+            const R = (v0 * v0 * Math.sin(2 * a)) / g;
+            return [
+                { label: 'Theoretical Range', value: R.toFixed(1), unit: 'm' },
+                { label: 'Apogee Height', value: ((v0 * v0 * Math.sin(a)**2) / (2 * g)).toFixed(1), unit: 'm' },
+                { label: 'Flight Time', value: ((2 * v0 * Math.sin(a)) / g).toFixed(2), unit: 's' },
+                { label: 'Current Ball X', value: simData.ball.position.x.toFixed(1), unit: 'm' }
+            ];
+        }
+    },
+
+    /* ─── 3. GALILEO'S INCLINED PLANE & PHOTOGATES ─── */
+    ramp: {
+        title: "Galileo's Inclined Plane & Photogates",
+        desc: "Hardwood inclined ramp with brass millimeter graduations and two optical photogate sensors. Observe acceleration independent of mass, and calculate acceleration from timing gates.",
+        actionBtn: "Release Cart",
+        onAction() {
+            simData.cartPos = 0;
+            simData.cartVel = 0;
+            playClickSound();
+        },
+        sliders: [
+            { id: 'incline', label: 'Incline Angle θ', min: 10, max: 40, step: 2.5, value: 20, unit: '°' },
+            { id: 'friction', label: 'Surface Friction μ', min: 0.0, max: 0.35, step: 0.05, value: 0.05, unit: '' }
+        ],
+        formula: "Acceleration on Incline:\na = g (sin θ − μ cos θ)\n\nVelocity at distance s:\nv² = 2as\n\nPhotogate gate time:\nΔt = d_flag / v",
+        init() {
+            camera.position.set(0, 6.2, 9); controls.target.set(0, 5.0, 0);
+            simData.cartPos = 0; simData.cartVel = 0;
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const woodMat = new THREE.MeshStandardMaterial({ map: makeWoodBenchTexture(), roughness: 0.55 });
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x333b4d, metalness: 0.7, roughness: 0.45 });
+
+            const rampBase = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.25, 1.8), woodMat);
+            rampBase.position.y = 0.12; rampBase.receiveShadow = true; apparatus.add(rampBase);
+
+            simData.jackPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.0, 16), ironMat);
+            simData.jackPillar.position.set(-3.6, 1.5, 0); apparatus.add(simData.jackPillar);
+
+            simData.inclineBoard = new THREE.Group();
+            simData.inclineBoard.position.set(3.8, 0.25, 0);
+
+            const track = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.15, 1.4), woodMat);
+            track.position.set(-3.8, 0.075, 0); track.castShadow = true;
+            simData.inclineBoard.add(track);
+
+            const ruler = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 0.2), new THREE.MeshStandardMaterial({
+                map: makeRulerTexture(), roughness: 0.5
+            }));
+            ruler.rotation.x = -Math.PI / 2; ruler.position.set(-3.8, 0.16, 0.55);
+            simData.inclineBoard.add(ruler);
+
+            const gateMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.7, roughness: 0.4 });
+            [-1.8, -5.5].forEach(gx => {
+                const gate = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 1.5), gateMat);
+                gate.position.set(gx, 0.45, 0); simData.inclineBoard.add(gate);
+                const led = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({color: 0x22c55e}));
+                led.position.set(gx, 0.7, -0.6); simData.inclineBoard.add(led);
+            });
+
+            simData.cart = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.25, 0.6), new THREE.MeshStandardMaterial({color: 0x3b82f6, metalness: 0.4, roughness: 0.4}));
+            body.position.y = 0.2; body.castShadow = true; simData.cart.add(body);
+
+            [[-0.25, -0.32], [0.25, -0.32], [-0.25, 0.32], [0.25, 0.32]].forEach(([wx, wz]) => {
+                const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 16), brassMat);
+                wheel.rotation.x = Math.PI / 2; wheel.position.set(wx, 0.12, wz);
+                simData.cart.add(wheel);
+            });
+
+            const flag = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.4, 0.04), brassMat);
+            flag.position.set(0, 0.45, 0); simData.cart.add(flag);
+
+            simData.inclineBoard.add(simData.cart);
+            apparatus.add(simData.inclineBoard);
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const theta = getSlider('incline') * Math.PI / 180;
+            const mu = getSlider('friction');
+            const g = 9.8;
+
+            simData.inclineBoard.rotation.z = theta;
+
+            const hJack = 7.6 * Math.sin(theta);
+            simData.jackPillar.scale.y = Math.max(hJack / 3.0, 0.1);
+            simData.jackPillar.position.y = 0.25 + hJack / 2;
+
+            const netA = Math.max(g * (Math.sin(theta) - mu * Math.cos(theta)), 0);
+            simData.cartVel += netA * dt;
+            simData.cartPos += simData.cartVel * dt;
+
+            if (simData.cartPos > 6.8) {
+                simData.cartPos = 0;
+                simData.cartVel = 0;
+                playClickSound();
+            }
+
+            simData.cart.position.set(-7.0 + simData.cartPos, 0.16, 0);
+        },
+        telemetry() {
+            const theta = getSlider('incline') * Math.PI / 180;
+            const mu = getSlider('friction');
+            const a = Math.max(9.8 * (Math.sin(theta) - mu * Math.cos(theta)), 0);
+            return [
+                { label: 'Incline Angle', value: getSlider('incline'), unit: '°' },
+                { label: 'Acceleration (a)', value: a.toFixed(2), unit: 'm/s²' },
+                { label: 'Instant Velocity', value: simData.cartVel.toFixed(2), unit: 'm/s' },
+                { label: 'Distance Rolled', value: simData.cartPos.toFixed(2), unit: 'm' }
+            ];
+        }
+    },
+
+    /* ─── 4. HELICAL SPRING RESONATOR ─── */
+    spring: {
+        title: "Helical Spring Resonator — Hooke's Law & Energy",
+        desc: "Precision steel helical spring mounted on a heavy cast-iron lab stand with a millimeter scale. Watch the dynamic exchange between Kinetic Energy (green) and Elastic Potential Energy (red).",
+        actionBtn: "Displace Spring",
+        onAction() {
+            playClickSound();
+        },
+        sliders: [
+            { id: 'k', label: 'Spring Constant k', min: 5, max: 35, step: 1, value: 15, unit: 'N/m' },
+            { id: 'mass', label: 'Suspended Mass m', min: 0.5, max: 4.0, step: 0.25, value: 1.5, unit: 'kg' },
+            { id: 'amplitude', label: 'Displacement A', min: 0.4, max: 1.8, step: 0.1, value: 1.0, unit: 'm' }
+        ],
+        formula: "Hooke's Restoring Force:\nF = −k x\n\nNatural Angular Frequency:\nω₀ = √(k / m)\nPeriod: T = 2π √(m/k)\n\nTotal Energy Conservation:\nE_total = ½ k A² = KE + PE",
+        init() {
+            camera.position.set(0, 6.0, 7.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x333b4d, metalness: 0.7, roughness: 0.4 });
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.25, 2.0), ironMat);
+            base.position.y = 0.12; base.receiveShadow = true; apparatus.add(base);
+
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.8, 16), ironMat);
+            post.position.set(-1.0, 2.4, 0); post.castShadow = true; apparatus.add(post);
+
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 16), ironMat);
+            arm.rotation.z = Math.PI / 2; arm.position.set(-0.2, 4.6, 0); apparatus.add(arm);
+
+            const scaleMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 4.2), new THREE.MeshStandardMaterial({
+                map: makeRulerTexture(), roughness: 0.5
+            }));
+            scaleMesh.rotation.y = Math.PI / 2; scaleMesh.position.set(-0.9, 2.5, 0.3);
+            apparatus.add(scaleMesh);
+
+            simData.coils = 18;
+            simData.springGroup = new THREE.Group();
+            simData.springGroup.position.set(0.5, 4.5, 0);
+
+            const springMat = new THREE.MeshStandardMaterial({ color: 0xd4d8e0, metalness: 0.8, roughness: 0.25 });
+            simData.ringMeshes = [];
+            for (let i = 0; i < simData.coils; i++) {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.026, 8, 24), springMat);
+                ring.rotation.x = Math.PI / 2;
+                simData.springGroup.add(ring);
+                simData.ringMeshes.push(ring);
+            }
+            apparatus.add(simData.springGroup);
+
+            const weightMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.5, 24), brassMat);
+            weightMesh.castShadow = true; apparatus.add(weightMesh);
+            simData.weightMesh = weightMesh;
+
+            const keBar = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.01, 0.25), new THREE.MeshBasicMaterial({color: 0x22c55e}));
+            keBar.position.set(2.0, 0.1, 0); apparatus.add(keBar);
+            const peBar = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.01, 0.25), new THREE.MeshBasicMaterial({color: 0xef4444}));
+            peBar.position.set(2.5, 0.1, 0); apparatus.add(peBar);
+
+            simData.keBar = keBar; simData.peBar = peBar;
+            scene.add(apparatus);
+        },
+        update(dt, t) {
+            const k = getSlider('k'), m = getSlider('mass'), A = getSlider('amplitude');
+            const omega = Math.sqrt(k / m);
+
+            const yOffset = A * Math.cos(omega * t);
+            const currentSpringLen = 2.2 - yOffset;
+
+            simData.ringMeshes.forEach((ring, idx) => {
+                ring.position.y = - (idx / (simData.coils - 1)) * currentSpringLen;
+            });
+
+            simData.weightMesh.position.set(0.5, 4.5 - currentSpringLen - 0.25, 0);
+
+            const v = - A * omega * Math.sin(omega * t);
+            const KE = 0.5 * m * v * v;
+            const PE = 0.5 * k * yOffset * yOffset;
+            const TotalE = 0.5 * k * A * A;
+
+            const keH = Math.max((KE / TotalE) * 3.5, 0.01);
+            const peH = Math.max((PE / TotalE) * 3.5, 0.01);
+
+            simData.keBar.scale.y = keH * 100; simData.keBar.position.y = keH * 0.5;
+            simData.peBar.scale.y = peH * 100; simData.peBar.position.y = peH * 0.5;
+        },
+        telemetry() {
+            const k = getSlider('k'), m = getSlider('mass'), A = getSlider('amplitude');
+            const T = 2 * Math.PI * Math.sqrt(m / k);
+            return [
+                { label: 'Period (T)', value: T.toFixed(2), unit: 's' },
+                { label: 'Frequency', value: (1 / T).toFixed(2), unit: 'Hz' },
+                { label: 'Total Energy', value: (0.5 * k * A * A).toFixed(2), unit: 'J' },
+                { label: 'Angular Freq ω', value: Math.sqrt(k / m).toFixed(2), unit: 'rad/s' }
+            ];
+        }
+    },
+
+    /* ─── 5. MECHANICAL GYROSCOPE WITH PRECESSION ─── */
+    gyroscope: {
+        title: "Mechanical Gyroscope & Angular Momentum",
+        desc: "Precision dual brass and chrome gimbals with a heavy spinning flywheel. The faster the rotor spins, the slower it precesses under gravity, demonstrating angular momentum conservation.",
+        actionBtn: "Boost Spin",
+        onAction() {
+            const input = document.getElementById('input-spin');
+            if (input) { input.value = Math.min(parseFloat(input.value) + 4, 20); }
+            playClickSound();
+        },
+        sliders: [
+            { id: 'spin', label: 'Rotor Spin Speed', min: 2, max: 20, step: 1, value: 10, unit: 'rev/s' },
+            { id: 'tilt', label: 'Gimbal Tilt Angle', min: 10, max: 50, step: 5, value: 25, unit: '°' }
+        ],
+        formula: "Angular Momentum:\nL = I · ω_spin\n\nGyroscopic Precession Rate:\nΩ_prec = τ / L = (m g r) / (I · ω)\nFaster spin ⇒ Slower precession",
+        init() {
+            camera.position.set(0, 6.0, 7.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe0e3e8, metalness: 0.8, roughness: 0.22 });
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x333b4d, metalness: 0.7, roughness: 0.45 });
+
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.3, 32), ironMat);
+            base.position.y = 0.15; apparatus.add(base);
+
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.0, 16), ironMat);
+            post.position.y = 1.3; apparatus.add(post);
+
+            const pivot = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), chromeMat);
+            pivot.position.y = 2.4; apparatus.add(pivot);
+
+            simData.gyroPivot = new THREE.Group();
+            simData.gyroPivot.position.set(0, 2.4, 0);
+
+            const outerGimbal = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.06, 16, 32), brassMat);
+            simData.gyroPivot.add(outerGimbal);
+
+            const innerGimbal = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.05, 16, 32), chromeMat);
+            innerGimbal.rotation.y = Math.PI / 2;
+            simData.gyroPivot.add(innerGimbal);
+
+            const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.6, 16), chromeMat);
+            axle.rotation.z = Math.PI / 2;
+            simData.gyroPivot.add(axle);
+
+            simData.rotor = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.2, 32), brassMat);
+            simData.rotor.rotation.z = Math.PI / 2;
+            simData.gyroPivot.add(simData.rotor);
+
+            apparatus.add(simData.gyroPivot);
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const spin = getSlider('spin');
+            const tilt = getSlider('tilt') * Math.PI / 180;
+
+            const precSpeed = 4.0 / (spin + 0.1);
+            simData.gyroPivot.rotation.y += precSpeed * dt;
+            simData.gyroPivot.rotation.z = tilt;
+
+            simData.rotor.rotation.x += spin * 10 * dt;
+        },
+        telemetry() {
+            const spin = getSlider('spin');
+            return [
+                { label: 'Rotor Spin', value: spin, unit: 'rev/s' },
+                { label: 'Precession Speed', value: (4.0 / (spin + 0.1)).toFixed(2), unit: 'rad/s' },
+                { label: 'L Angular Momentum', value: (0.15 * spin).toFixed(2), unit: 'kg·m²/s' },
+                { label: 'Stability Index', value: (spin * 10).toFixed(0), unit: '%' }
+            ];
+        }
+    },
+
+    /* ─── 6. ARCHIMEDES BUOYANCY TANK WITH SPOUT & BEAKER ─── */
+    buoyancy: {
+        title: "Archimedes Buoyancy Tank & Dynamometer",
+        desc: "Cylindrical glass water tank with an angled overflow spout pouring displaced fluid into a collection beaker. An overhead spring dynamometer scale measures the apparent weight loss of the brass mass.",
+        actionBtn: "Full Submersion",
+        onAction() {
+            const input = document.getElementById('input-submerge');
+            if (input) input.value = (parseFloat(input.value) > 0.8) ? 0.0 : 1.0;
+            playClickSound();
+        },
+        sliders: [
+            { id: 'submerge', label: 'Submersion Depth', min: 0.0, max: 1.0, step: 0.05, value: 0.6, unit: '' },
+            { id: 'fluidDensity', label: 'Fluid Density ρ', min: 800, max: 1300, step: 50, value: 1000, unit: 'kg/m³' }
+        ],
+        formula: "Archimedes' Principle:\nF_buoyant = ρ_fluid · V_submerged · g\n\nApparent Weight:\nW_apparent = W_actual − F_buoyant\n\nDisplaced Volume = Submerged Volume",
+        init() {
+            camera.position.set(0, 6.2, 8.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0xe0f2fe, transmission: 0.90, transparent: true, opacity: 0.35, roughness: 0.12, ior: 1.48
+            });
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x333b4d, metalness: 0.7, roughness: 0.45 });
+
+            const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.8, 32, 1, true), glassMat);
+            tank.position.set(-0.6, 1.4, 0); tank.castShadow = true; apparatus.add(tank);
+
+            const tankBase = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.1, 32), glassMat);
+            tankBase.position.set(-0.6, 0.05, 0); apparatus.add(tankBase);
+
+            const waterMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65, roughness: 0.2 });
+            simData.water = new THREE.Mesh(new THREE.CylinderGeometry(1.18, 1.18, 2.0, 32), waterMat);
+            simData.water.position.set(-0.6, 1.0, 0); apparatus.add(simData.water);
+
+            const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 16), glassMat);
+            spout.rotation.z = -Math.PI / 3; spout.position.set(0.65, 2.0, 0); apparatus.add(spout);
+
+            const beaker = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.4, 24, 1, true), glassMat);
+            beaker.position.set(1.9, 0.7, 0); apparatus.add(beaker);
+
+            simData.dispWater = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.8, 24), waterMat);
+            simData.dispWater.position.set(1.9, 0.4, 0); apparatus.add(simData.dispWater);
+
+            const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 5.0, 16), ironMat);
+            stand.position.set(-2.2, 2.5, 0); apparatus.add(stand);
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.08), ironMat);
+            arm.position.set(-1.2, 4.9, 0); apparatus.add(arm);
+
+            const dynTube = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.2, 16), new THREE.MeshStandardMaterial({color: 0xf1f5f9, roughness: 0.4}));
+            dynTube.position.set(-0.6, 4.2, 0); apparatus.add(dynTube);
+
+            simData.wireGeo = new THREE.BufferGeometry();
+            simData.wireGeo.setAttribute('position', new THREE.Float32BufferAttribute([ -0.6, 3.6, 0, -0.6, 2.5, 0 ], 3));
+            const wire = new THREE.Line(simData.wireGeo, new THREE.LineBasicMaterial({color: 0x94a3b8}));
+            apparatus.add(wire);
+
+            simData.subCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.1, 24), brassMat);
+            simData.subCyl.castShadow = true; apparatus.add(simData.subCyl);
+
+            scene.add(apparatus);
+        },
+        update() {
+            const frac = getSlider('submerge');
+            const cylY = 3.0 - frac * 1.8;
+            simData.subCyl.position.set(-0.6, cylY, 0);
+
+            const pos = simData.wireGeo.attributes.position.array;
+            pos[4] = cylY + 0.55;
+            simData.wireGeo.attributes.position.needsUpdate = true;
+
+            simData.water.scale.y = 1.0 + frac * 0.12;
+            simData.dispWater.scale.y = Math.max(frac, 0.02);
+            simData.dispWater.position.y = 0.1 + (frac * 0.4);
+        },
+        telemetry() {
+            const frac = getSlider('submerge');
+            const rho = getSlider('fluidDensity');
+            const V_tot = 0.0007, V_disp = V_tot * frac;
+            const Fb = rho * V_disp * 9.8;
+            const W_act = 7800 * V_tot * 9.8;
+            return [
+                { label: 'Buoyancy Force (F_b)', value: Fb.toFixed(2), unit: 'N' },
+                { label: 'Scale Reading (W\')', value: Math.max(W_act - Fb, 0).toFixed(2), unit: 'N' },
+                { label: 'Actual Mass Weight', value: W_act.toFixed(2), unit: 'N' },
+                { label: 'Displaced Volume', value: (V_disp * 1000).toFixed(2), unit: 'L' }
+            ];
+        }
+    },
+
+    /* ─── 7. KINETIC GAS CHAMBER ─── */
+    gas: {
+        title: "Kinetic Gas Chamber — Ideal Gas Law",
+        desc: "Sealed glass pressure chamber with 100 gas molecules bouncing off walls. Adjust temperature to see particle velocity and pressure needle rise according to PV = nRT.",
+        actionBtn: "Heat Pulse (+100K)",
+        onAction() {
+            const input = document.getElementById('input-temp');
+            if (input) input.value = Math.min(parseFloat(input.value) + 100, 700);
+            playClickSound();
+        },
+        sliders: [
+            { id: 'temp', label: 'Gas Temperature T', min: 100, max: 700, step: 25, value: 300, unit: 'K' },
+            { id: 'count', label: 'Molecule Count N', min: 40, max: 140, step: 10, value: 80, unit: '' }
+        ],
+        formula: "Ideal Gas Equation:\nP · V = n · R · T\n\nRoot-Mean-Square Velocity:\nv_rms = √(3 k_B T / m)\nPressure emerges from rate of momentum transfer on walls",
+        init() {
+            camera.position.set(0, 6.0, 7.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0xecfeff, transmission: 0.90, transparent: true, opacity: 0.32, roughness: 0.12
+            });
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x333b4d, metalness: 0.7, roughness: 0.45 });
+
+            const base = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.25, 3.6), ironMat);
+            base.position.y = 0.12; apparatus.add(base);
+
+            const chamber = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.8, 2.8), glassMat);
+            chamber.position.y = 1.65; chamber.castShadow = true; apparatus.add(chamber);
+
+            [[-1.4,-1.4],[1.4,-1.4],[-1.4,1.4],[1.4,1.4]].forEach(([bx, bz]) => {
+                const corner = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8, 8), brassMat);
+                corner.position.set(bx, 1.65, bz); apparatus.add(corner);
+            });
+
+            const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.1, 24), new THREE.MeshStandardMaterial({
+                map: makeDialTexture("PRESSURE (kPa)"), roughness: 0.5
+            }));
+            dial.position.set(0, 3.15, 0); apparatus.add(dial);
+
+            simData.needle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.32), new THREE.MeshBasicMaterial({color: 0xef4444}));
+            simData.needle.position.set(0, 3.22, 0); apparatus.add(simData.needle);
+
+            const therm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 12), glassMat);
+            therm.position.set(1.55, 1.65, 0); apparatus.add(therm);
+            simData.mercury = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 12), new THREE.MeshBasicMaterial({color: 0xef4444}));
+            simData.mercury.position.set(1.55, 0.9, 0); apparatus.add(simData.mercury);
+
+            simData.particles = [];
+            for (let i = 0; i < 140; i++) {
+                const p = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), new THREE.MeshBasicMaterial({color: 0x38bdf8}));
+                p.position.set((Math.random()-0.5)*2.4, 1.65 + (Math.random()-0.5)*2.4, (Math.random()-0.5)*2.4);
+                apparatus.add(p);
+                simData.particles.push({
+                    mesh: p,
+                    vel: new THREE.Vector3((Math.random()-0.5)*3, (Math.random()-0.5)*3, (Math.random()-0.5)*3)
+                });
+            }
+
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const T = getSlider('temp');
+            const count = getSlider('count');
+            const speedScale = Math.sqrt(T / 300);
+
+            simData.needle.rotation.y = - (T / 700) * 2.8 + 1.4;
+
+            simData.mercury.scale.y = (T / 700) * 2.2;
+            simData.mercury.position.y = 0.5 + (T / 700) * 1.1;
+
+            simData.particles.forEach((p, idx) => {
+                p.mesh.visible = (idx < count);
+                if (idx >= count) return;
+
+                p.mesh.position.addScaledVector(p.vel, dt * speedScale);
+
+                ['x', 'z'].forEach(axis => {
+                    if (Math.abs(p.mesh.position[axis]) > 1.35) {
+                        p.mesh.position[axis] = Math.sign(p.mesh.position[axis]) * 1.35;
+                        p.vel[axis] *= -1;
+                    }
+                });
+                if (p.mesh.position.y > 3.0) { p.mesh.position.y = 3.0; p.vel.y *= -1; }
+                if (p.mesh.position.y < 0.3) { p.mesh.position.y = 0.3; p.vel.y *= -1; }
+            });
+        },
+        telemetry() {
+            const T = getSlider('temp'), N = getSlider('count');
+            const P = (N * T * 1.38 * 0.1).toFixed(1);
+            return [
+                { label: 'Temperature (T)', value: T, unit: 'K' },
+                { label: 'Gas Pressure (P)', value: P, unit: 'kPa' },
+                { label: 'RMS Velocity (v_rms)', value: (Math.sqrt(T / 300) * 510).toFixed(0), unit: 'm/s (N₂)' },
+                { label: 'Active Molecules', value: N, unit: 'particles' }
+            ];
+        }
+    },
+
+    /* ─── 8. TESLA COIL TRANSFORMER ─── */
+    tesla: {
+        title: "Tesla High-Voltage Resonant Transformer",
+        desc: "Quarter-wave resonant transformer with a primary copper induction loop, tall secondary winding, and polished chrome toroid discharging animated electrical arcs into air.",
+        actionBtn: "⚡ Spark Discharge",
+        onAction() {
+            playSparkSound();
+        },
+        sliders: [
+            { id: 'arcPower', label: 'Discharge Voltage', min: 20, max: 120, step: 5, value: 75, unit: 'kV' },
+            { id: 'arcCount', label: 'Simultaneous Arcs', min: 2, max: 8, step: 1, value: 5, unit: '' }
+        ],
+        formula: "Resonant Frequency:\nf₀ = 1 / (2π √(L₂ · C_toroid))\n\nVoltage Gain:\nV₂ ≈ V₁ · √(L₂ / L₁)\n\nBreakdown field of air: E_break ≈ 30 kV/cm",
+        init() {
+            camera.position.set(0, 6.5, 8.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const baseMat = new THREE.MeshStandardMaterial({ map: makeWoodBenchTexture(), roughness: 0.6 });
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 2.8), baseMat);
+            base.position.y = 0.2; apparatus.add(base);
+
+            const copperMat = new THREE.MeshStandardMaterial({ color: 0xb87333, metalness: 0.8, roughness: 0.3 });
+            for(let r=0; r<4; r++) {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0 - r*0.12, 0.04, 12, 32), copperMat);
+                ring.rotation.x = Math.PI / 2; ring.position.y = 0.45 + r*0.06;
+                apparatus.add(ring);
+            }
+
+            const coil = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 3.2, 24), copperMat);
+            coil.position.y = 2.1; coil.castShadow = true; apparatus.add(coil);
+
+            const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe0e3e8, metalness: 0.8, roughness: 0.22 });
+            const toroid = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.26, 16, 32), chromeMat);
+            toroid.rotation.x = Math.PI / 2; toroid.position.y = 3.8; toroid.castShadow = true;
+            apparatus.add(toroid);
+
+            simData.arcs = [];
+            for (let i = 0; i < 8; i++) {
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(36), 3));
+                const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xa5b4fc, linewidth: 2 }));
+                apparatus.add(line);
+                simData.arcs.push({ line, angle: i * (Math.PI / 4) });
+            }
+
+            scene.add(apparatus);
+        },
+        update(dt, t) {
+            const count = getSlider('arcCount');
+            const voltage = getSlider('arcPower');
+            const maxRadius = (voltage / 100) * 2.8;
+
+            simData.arcs.forEach((arc, i) => {
+                arc.line.visible = (i < count);
+                if (i >= count) return;
+
+                const pos = arc.line.geometry.attributes.position.array;
+                const steps = pos.length / 3;
+                const baseAngle = arc.angle + Math.sin(t * 10 + i) * 0.2;
+
+                for (let s = 0; s < steps; s++) {
+                    const frac = s / (steps - 1);
+                    const r = frac * maxRadius;
+                    const jitter = (frac > 0) ? (Math.random() - 0.5) * 0.35 * frac : 0;
+                    pos[s * 3] = Math.cos(baseAngle) * r + jitter;
+                    pos[s * 3 + 1] = 3.8 + frac * 0.4 + jitter;
+                    pos[s * 3 + 2] = Math.sin(baseAngle) * r + jitter;
+                }
+                arc.line.geometry.attributes.position.needsUpdate = true;
+            });
+        },
+        telemetry() {
+            return [
+                { label: 'Voltage Output', value: getSlider('arcPower'), unit: 'kV' },
+                { label: 'Resonant Freq', value: '250', unit: 'kHz' },
+                { label: 'Breakdown Arc Count', value: getSlider('arcCount'), unit: 'arcs' },
+                { label: 'Ionization Status', value: 'Plasma Corona', unit: '' }
+            ];
+        }
+    },
+
+    /* ─── 9. MAGNETIC DIPOLE & IRON FILINGS ─── */
+    magnet: {
+        title: "Magnetic Dipole & Iron Filings",
+        desc: "Painted alnico bar magnet (Red North / Blue South) with 500 individual metallic iron filings on a glass plate aligning along true 3D dipole field vectors B.",
+        actionBtn: "Jiggle Filings",
+        onAction() {
+            playClickSound();
+        },
+        sliders: [
+            { id: 'magStrength', label: 'Magnet Strength B₀', min: 1, max: 5, step: 0.5, value: 3, unit: 'Tesla' },
+            { id: 'filingCount', label: 'Filing Density', min: 200, max: 500, step: 50, value: 400, unit: '' }
+        ],
+        formula: "Magnetic Dipole Field Equation:\nB(r) = (μ₀ / 4π r³) [ 3(m · r̂)r̂ − m ]\n\nGauss's Law for Magnetism:\n∮ B · dA = 0  (No Magnetic Monopoles)",
+        init() {
+            camera.position.set(0, 6.8, 7.5); controls.target.set(0, 4.5, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const plate = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.1, 5.5), new THREE.MeshPhysicalMaterial({
+                color: 0xffffff, transmission: 0.88, transparent: true, opacity: 0.35, roughness: 0.2
+            }));
+            plate.position.y = 0.05; apparatus.add(plate);
+
+            const north = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.7), new THREE.MeshStandardMaterial({color: 0xef4444, roughness: 0.45}));
+            north.position.set(0.8, 0.28, 0); north.castShadow = true; apparatus.add(north);
+            const south = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 0.7), new THREE.MeshStandardMaterial({color: 0x3b82f6, roughness: 0.45}));
+            south.position.set(-0.8, 0.28, 0); south.castShadow = true; apparatus.add(south);
+
+            simData.filings = [];
+            const needleMat = new THREE.MeshStandardMaterial({ color: 0x242a38, metalness: 0.8, roughness: 0.35 });
+            for (let i = 0; i < 500; i++) {
+                const needle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 6), needleMat);
+                const x = (Math.random() - 0.5) * 7.2;
+                const z = (Math.random() - 0.5) * 4.8;
+                needle.position.set(x, 0.12, z);
+                apparatus.add(needle);
+                simData.filings.push({ mesh: needle, x, z });
+            }
+
+            scene.add(apparatus);
+        },
+        update() {
+            const B0 = getSlider('magStrength');
+            const count = getSlider('filingCount');
+
+            simData.filings.forEach((f, idx) => {
+                f.mesh.visible = (idx < count);
+                if (idx >= count) return;
+
+                const dx1 = f.x - 0.8, dz1 = f.z;
+                const r1 = Math.sqrt(dx1*dx1 + dz1*dz1) + 0.1;
+                const dx2 = f.x + 0.8, dz2 = f.z;
+                const r2 = Math.sqrt(dx2*dx2 + dz2*dz2) + 0.1;
+
+                const Bx = B0 * (dx1/(r1*r1*r1) - dx2/(r2*r2*r2));
+                const Bz = B0 * (dz1/(r1*r1*r1) - dz2/(r2*r2*r2));
+                const angle = Math.atan2(Bz, Bx);
+
+                f.mesh.rotation.y = -angle;
+            });
+        },
+        telemetry() {
+            return [
+                { label: 'Field Strength B₀', value: getSlider('magStrength'), unit: 'Tesla' },
+                { label: 'Active Iron Filings', value: getSlider('filingCount'), unit: 'needles' },
+                { label: 'Magnetic Dipole m', value: '1.25', unit: 'A·m²' },
+                { label: 'Monopole Flux', value: '0.00', unit: 'Weber' }
+            ];
+        }
+    },
+
+    /* ─── 10. GLASS PRISM SPECTROMETER ─── */
+    prism: {
+        title: "Glass Prism Spectrometer — Light Dispersion",
+        desc: "Flint glass equilateral triangular prism on a graduated turntable. Refracts an incident collimated white beam into the visible spectrum using Cauchy's wavelength-dependent dispersion.",
+        actionBtn: "Rotate 15°",
+        onAction() {
+            const input = document.getElementById('input-prismAngle');
+            if (input) input.value = (parseFloat(input.value) + 15) % 30;
+            playClickSound();
+        },
+        sliders: [
+            { id: 'prismAngle', label: 'Turntable Rotation', min: -25, max: 25, step: 1, value: 0, unit: '°' },
+            { id: 'flintIOR', label: 'Flint Glass Index n₀', min: 1.45, max: 1.75, step: 0.02, value: 1.58, unit: '' }
+        ],
+        formula: "Cauchy's Dispersion Equation:\nn(λ) = n₀ + B / λ²\n(n_violet > n_red ⇒ Violet bends most)\n\nSnell's Law at Interfaces:\nn₁ sin θ₁ = n₂ sin θ₂",
+        init() {
+            camera.position.set(0, 6.5, 7.8); controls.target.set(0, 4.6, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 0.3, 32), brassMat);
+            tableBase.position.y = 0.15; apparatus.add(tableBase);
+
+            const prismShape = new THREE.Shape();
+            prismShape.moveTo(0, 0); prismShape.lineTo(1.8, 0); prismShape.lineTo(0.9, 1.55); prismShape.lineTo(0, 0);
+
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0xecfeff, transmission: 0.92, transparent: true, opacity: 0.38, roughness: 0.08, ior: 1.58
+            });
+            const prismMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(prismShape, { depth: 1.8, bevelEnabled: false }), glassMat);
+            prismMesh.position.set(-0.9, 0.3, -0.9);
+            simData.prismMesh = prismMesh;
+            apparatus.add(prismMesh);
+
+            const ironMat = new THREE.MeshStandardMaterial({ color: 0x242a38, metalness: 0.7, roughness: 0.45 });
+            const collimator = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 3.2, 16), ironMat);
+            collimator.rotation.z = Math.PI / 2; collimator.position.set(-4.2, 1.05, 0);
+            apparatus.add(collimator);
+
+            const whiteBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.2, 8), new THREE.MeshBasicMaterial({color: 0xffffff}));
+            whiteBeam.rotation.z = Math.PI / 2; whiteBeam.position.set(-2.5, 1.05, 0);
+            apparatus.add(whiteBeam);
+
+            const spectrumColors = [0x7c3aed, 0x4f46e5, 0x0284c7, 0x16a34a, 0xeab308, 0xea580c, 0xdc2626];
+            simData.rainbowBeams = [];
+            spectrumColors.forEach(color => {
+                const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 5.5, 8), new THREE.MeshBasicMaterial({color}));
+                apparatus.add(ray);
+                simData.rainbowBeams.push(ray);
+            });
+
+            const screen = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.5, 3.5), new THREE.MeshStandardMaterial({color: 0xf1f5f9, roughness: 0.85}));
+            screen.position.set(5.2, 1.3, 0); screen.receiveShadow = true;
+            apparatus.add(screen);
+
+            scene.add(apparatus);
+        },
+        update() {
+            const rot = getSlider('prismAngle') * Math.PI / 180;
+            simData.prismMesh.rotation.y = rot;
+
+            simData.rainbowBeams.forEach((ray, i) => {
+                const spread = (i - 3) * 0.06;
+                const angle = 0.28 + spread + rot * 0.5;
+                ray.rotation.set(0, 0, 0);
+                ray.rotation.z = -angle;
+                ray.position.set(1.0 + Math.cos(angle) * 2.5, 1.05 - Math.sin(angle) * 2.5, 0);
+            });
+        },
+        telemetry() {
+            return [
+                { label: 'Dispersion Spectrum', value: 'VIBGYOR (7 Colors)', unit: '' },
+                { label: 'Flint Glass Index', value: getSlider('flintIOR'), unit: '' },
+                { label: 'Violet Deviation', value: 'Maximum Bend', unit: '400 nm' },
+                { label: 'Red Deviation', value: 'Minimum Bend', unit: '700 nm' }
+            ];
+        }
+    },
+
+    /* ─── 11. CLOCKWORK MECHANICAL BRASS ORRERY ─── */
+    orrery: {
+        title: "Clockwork Brass Orrery — Mechanical Astronomy",
+        desc: "Museum-grade mechanical planetarium with interlocking brass gears, an illuminated central Sun lamp, and geared radial arms driving Mercury, Venus, Earth-Moon, and Mars.",
+        actionBtn: "Double Speed",
+        onAction() {
+            const input = document.getElementById('input-gearSpeed');
+            if (input) input.value = (parseFloat(input.value) >= 3.0) ? 1.0 : (parseFloat(input.value) + 1.0);
+            playClickSound();
+        },
+        sliders: [
+            { id: 'gearSpeed', label: 'Clockwork Drive Speed', min: 0.2, max: 4.0, step: 0.2, value: 1.0, unit: '×' }
+        ],
+        formula: "Kepler's Third Law:\nT² / a³ = 4π² / (G M_sun)\n\nAngular Velocity Relation:\nω = 2π / T\nInner planets orbit significantly faster",
+        init() {
+            camera.position.set(0, 8.5, 9.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 4.0, 0);
+
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.75, roughness: 0.35 });
+            const darkBrass = new THREE.MeshStandardMaterial({ color: 0x99752b, metalness: 0.8, roughness: 0.4 });
+
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.2, 0.4, 32), brassMat);
+            base.position.y = 0.2; apparatus.add(base);
+
+            for(let g=0; g<4; g++) {
+                const gear = new THREE.Mesh(new THREE.CylinderGeometry(0.8 - g*0.15, 0.8 - g*0.15, 0.08, 24), darkBrass);
+                gear.position.set(0, 0.45 + g*0.12, 0); apparatus.add(gear);
+            }
+
+            const sun = new THREE.Mesh(new THREE.SphereGeometry(0.65, 32, 32), new THREE.MeshBasicMaterial({color: 0xffaa00}));
+            sun.position.set(0, 2.2, 0); apparatus.add(sun);
+
+            const sunLight = new THREE.PointLight(0xffeedd, 1.2, 12);
+            sunLight.position.set(0, 2.2, 0); apparatus.add(sunLight);
+
+            const planets = [
+                { name: 'Mercury', r: 1.4, size: 0.12, color: 0xa8a29e, speed: 4.15 },
+                { name: 'Venus',   r: 2.2, size: 0.22, color: 0xfde047, speed: 1.62 },
+                { name: 'Earth',   r: 3.2, size: 0.25, color: 0x38bdf8, speed: 1.00 },
+                { name: 'Mars',    r: 4.2, size: 0.18, color: 0xef4444, speed: 0.53 }
+            ];
+
+            simData.planetMeshes = [];
+            planets.forEach(p => {
+                const armMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, p.r, 8), brassMat);
+                armMesh.rotation.z = Math.PI / 2; armMesh.position.set(p.r / 2, 1.2 + p.size, 0);
+
+                const pSphere = new THREE.Mesh(new THREE.SphereGeometry(p.size, 24, 24), new THREE.MeshStandardMaterial({color: p.color, roughness: 0.6}));
+                pSphere.position.set(p.r, 1.2 + p.size, 0); pSphere.castShadow = true;
+
+                const group = new THREE.Group();
+                group.add(armMesh); group.add(pSphere);
+                apparatus.add(group);
+                simData.planetMeshes.push({ group, speed: p.speed, angle: Math.random() * Math.PI });
+            });
+
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const spd = getSlider('gearSpeed');
+            simData.planetMeshes.forEach(p => {
+                p.angle += p.speed * spd * dt * 0.8;
+                p.group.rotation.y = p.angle;
+            });
+        },
+        telemetry() {
+            return [
+                { label: 'Orrery Mechanism', value: '4-Stage Gear Train', unit: '' },
+                { label: 'Drive Speed', value: getSlider('gearSpeed') + 'x', unit: '' },
+                { label: 'Earth Orbital Period', value: '365.25', unit: 'Days' },
+                { label: 'Kepler Ratio', value: 'T² ∝ a³', unit: 'verified' }
+            ];
+        }
+    },
+
+    /* ─── 12. QUANTUM ATOMIC MODEL ─── */
+    atom: {
+        title: "Quantum Atomic Model & Electron Shells",
+        desc: "Proton and neutron cluster nucleus surrounded by multi-shell quantum electron probability density clouds. Watch electrons circulate in 3D spherical harmonics.",
+        actionBtn: "Add Shell",
+        onAction() {
+            const input = document.getElementById('input-shells');
+            if (input) input.value = (parseFloat(input.value) % 4) + 1;
+            playClickSound();
+        },
+        sliders: [
+            { id: 'shells', label: 'Principal Quantum n', min: 1, max: 4, step: 1, value: 3, unit: '' },
+            { id: 'orbSpeed', label: 'Orbital Speed', min: 0.5, max: 4.0, step: 0.5, value: 1.5, unit: '×' }
+        ],
+        formula: "Bohr-Rydberg Energy Levels:\nE_n = −13.6 eV / n²\n\nBohr Orbital Radii:\nr_n = n² · a₀  (a₀ = 0.529 Å)\n\nHeisenberg Uncertainty:\nΔx · Δp ≥ ℏ / 2",
+        init() {
+            camera.position.set(0, 6.2, 8.5); controls.target.set(0, 5.0, 0);
+            const apparatus = new THREE.Group();
+            apparatus.position.set(0, 5.0, 0);
+
+            simData.nucleus = new THREE.Group();
+            const protonMat = new THREE.MeshStandardMaterial({color: 0xef4444, metalness: 0.2, roughness: 0.5});
+            const neutronMat = new THREE.MeshStandardMaterial({color: 0x64748b, metalness: 0.2, roughness: 0.5});
+
+            for(let i=0; i<8; i++) {
+                const s = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), (i%2===0)?protonMat:neutronMat);
+                s.position.set((Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4);
+                simData.nucleus.add(s);
+            }
+            apparatus.add(simData.nucleus);
+
+            simData.shells = [];
+            const shellColors = [0x818cf8, 0x06b6d4, 0x22c55e, 0xf59e0b];
+            for (let n = 1; n <= 4; n++) {
+                const r = n * 0.9;
+                const cloud = new THREE.Mesh(
+                    new THREE.SphereGeometry(r, 24, 24),
+                    new THREE.MeshBasicMaterial({ color: shellColors[n-1], transparent: true, opacity: 0.05, wireframe: true })
+                );
+                apparatus.add(cloud);
+
+                const electrons = [];
+                for(let e=0; e<n*2; e++) {
+                    const elMesh = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), new THREE.MeshBasicMaterial({color: shellColors[n-1]}));
+                    apparatus.add(elMesh);
+                    electrons.push({ mesh: elMesh, angle: e * (Math.PI / n), tilt: e * 0.8 });
+                }
+                simData.shells.push({ cloud, electrons, r, n });
+            }
+
+            scene.add(apparatus);
+        },
+        update(dt) {
+            const maxN = getSlider('shells');
+            const spd = getSlider('orbSpeed');
+            simData.nucleus.rotation.y += dt * 0.5;
+
+            simData.shells.forEach(sh => {
+                const isVisible = (sh.n <= maxN);
+                sh.cloud.visible = isVisible;
+                sh.electrons.forEach(el => {
+                    el.mesh.visible = isVisible;
+                    if (!isVisible) return;
+                    el.angle += spd * (3.0 / sh.n) * dt;
+                    const x = sh.r * Math.cos(el.angle) * Math.cos(el.tilt);
+                    const y = sh.r * Math.sin(el.angle);
+                    const z = sh.r * Math.cos(el.angle) * Math.sin(el.tilt);
+                    el.mesh.position.set(x, 5.0 + y, z);
+                });
+            });
+        },
+        telemetry() {
+            const n = getSlider('shells');
+            return [
+                { label: 'Quantum Shell (n)', value: n, unit: '' },
+                { label: 'Shell Energy (E_n)', value: (-13.6 / (n * n)).toFixed(2), unit: 'eV' },
+                { label: 'Bohr Radius (r_n)', value: (n * n * 0.529).toFixed(2), unit: 'Å' },
+                { label: 'Shell Capacity', value: (2 * n * n), unit: 'electrons' }
+            ];
+        }
+    }
+};
+
+// Generic Simulation Switcher
+function activateSimulation(simKey) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.nav-item[data-sim="${simKey}"]`)?.classList.add('active');
+
+    currentSim = simKey;
+    const isHome = (simKey === 'home');
+    document.getElementById('top-title').textContent = isHome ? 'Overview' : SIMULATIONS[simKey]?.title || simKey;
+
+    const pageHome = document.getElementById('page-home');
+    const pageSim = document.getElementById('page-sim');
+
+    if (isHome) {
+        pageHome.classList.remove('hidden');
+        pageSim.classList.add('hidden');
+        document.getElementById('btn-action').classList.add('hidden');
+        cancelAnimationFrame(animId);
+        return;
+    }
+
+    pageHome.classList.add('hidden');
+    pageSim.classList.remove('hidden');
+
+    const config = SIMULATIONS[simKey];
+    document.getElementById('active-title').textContent = config.title;
+    document.getElementById('active-desc').textContent = config.desc;
+    document.getElementById('formula-display').textContent = config.formula;
+
+    const actionBtn = document.getElementById('btn-action');
+    if (config.actionBtn) {
+        actionBtn.textContent = config.actionBtn;
+        actionBtn.classList.remove('hidden');
+        actionBtn.onclick = () => { if (config.onAction) config.onAction(); };
+    } else {
+        actionBtn.classList.add('hidden');
+    }
+
+    const slidersBox = document.getElementById('sliders-box');
+    slidersBox.innerHTML = '';
+    config.sliders.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'slider-row';
+        div.innerHTML = `
+            <div class="slider-header">
+                <span class="slider-label">${s.label}</span>
+                <span class="slider-value" id="val-${s.id}">${s.value} ${s.unit}</span>
+            </div>
+            <input type="range" id="input-${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.value}">
+        `;
+        slidersBox.appendChild(div);
+        div.querySelector('input').addEventListener('input', function() {
+            document.getElementById(`val-${s.id}`).textContent = `${this.value} ${s.unit}`;
+        });
+    });
+
+    initThree();
+    config.init();
+    paused = false;
+    document.getElementById('btn-pause').textContent = '⏸ Pause';
+    animateLoop();
+}
+
+function getSlider(id) {
+    const el = document.getElementById(`input-${id}`);
+    return el ? parseFloat(el.value) : 0;
+}
+
+// Camera Presets
+document.querySelectorAll('[data-cam]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-cam]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const mode = this.dataset.cam;
+        if (mode === 'bench') {
+            camera.position.set(0, 6.8, 8.5); controls.target.set(0, 5.0, 0);
+            document.getElementById('cam-badge').textContent = 'BENCH FOCUS';
+        } else if (mode === 'room') {
+            camera.position.set(0, 10, 18); controls.target.set(0, 5.0, 0);
+            document.getElementById('cam-badge').textContent = 'FULL LAB VIEW';
+        } else if (mode === 'top') {
+            camera.position.set(0, 18, 0.1); controls.target.set(0, 4.0, 0);
+            document.getElementById('cam-badge').textContent = 'TOP DOWN';
+        }
+    });
+});
+
+// Animation Loop
+let frames = 0, lastTime = 0;
+function animateLoop() {
+    animId = requestAnimationFrame(animateLoop);
+    const dt = clock.getDelta();
+    const t = clock.getElapsedTime();
+
+    frames++;
+    if (t - lastTime >= 0.5) {
+        document.getElementById('fps-counter').textContent = Math.round(frames / (t - lastTime)) + ' FPS';
+        frames = 0; lastTime = t;
+    }
+
+    if (!paused && SIMULATIONS[currentSim]) {
+        SIMULATIONS[currentSim].update(dt, t);
+        const data = SIMULATIONS[currentSim].telemetry();
+        const telemBox = document.getElementById('telemetry-box');
+        telemBox.innerHTML = data.map(item => `
+            <div class="telemetry-card">
+                <div class="t-label">${item.label}</div>
+                <div class="t-value">${item.value}<span class="t-unit">${item.unit}</span></div>
+            </div>
+        `).join('');
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// Global UI Event Handlers
+document.querySelectorAll('[data-sim]').forEach(item => {
+    item.addEventListener('click', () => activateSimulation(item.dataset.sim));
+});
+
+document.getElementById('btn-pause').addEventListener('click', function() {
+    paused = !paused;
+    this.textContent = paused ? '▶ Resume' : '⏸ Pause';
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+    if (currentSim !== 'home') activateSimulation(currentSim);
+});
+
+window.addEventListener('resize', () => {
+    if (!renderer) return;
+    const canvas = document.getElementById('canvas3d');
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+});
+</script>
+</body>
+</html>
